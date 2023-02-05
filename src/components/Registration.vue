@@ -1,12 +1,13 @@
 <script lang="ts">
 import { registerUser } from '@/apis/userApi';
-import Success from './Success.vue';
 
   export default {
     data() {
         return {
             open: false,
             snackBarOpen: false,
+            alertType: '',
+            alertText: '',
             email: "",
             password: "",
             emailRules: [
@@ -44,21 +45,27 @@ import Success from './Success.vue';
     methods: {
         registration() {
             registerUser(this.email, this.password).then((res) => {
-                if (res.status == 400 || res.status == 500) {
-                    //errore
-                }
-                else {
+                if (res.status == 400) {
+                    this.alertType = "error"
+                    this.alertText = "Errore del client"
+                    this.snackBarOpen = true;
+                } else if (res.status == 500) {
+                    this.alertType = "warning";
+                    this.alertText = "Errore sconosciuto del server"
+                    this.snackBarOpen = true;
+                } else {
+                    this.alertType = "success";
+                    this.alertText = "Registrazione avvenuta con successo"
+                    this.open = false;
                     this.snackBarOpen = true;
                 }
             });
         }
     },
-    components: { Success }
 }
 </script>
 
 <template>
-  <Success></Success>
   <v-btn
     color="primary"
   >
@@ -66,7 +73,6 @@ import Success from './Success.vue';
     <v-dialog
       v-model="open"
       activator="parent"
-      persistent
     >
     
     <v-sheet width="300" class="mx-auto my-10 py-10 px-10 elevation-8 w-50 h-50">
@@ -93,5 +99,25 @@ import Success from './Success.vue';
     </v-sheet>
 
     </v-dialog>
+
+    <v-snackbar
+      v-model="snackBarOpen"
+      :color="alertType"
+    >
+        <v-alert
+            :type="alertType"
+            :title="alertText"
+        ></v-alert>
+
+      <template v-slot:actions>
+        <v-btn
+          color="black"
+          variant="text"
+          @click="snackBarOpen = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-btn>
 </template>
