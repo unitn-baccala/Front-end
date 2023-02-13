@@ -21,7 +21,8 @@ export default function About() {
     return (
         <Box sx={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
             <Paper elevation={3} sx={{ width: "25%", padding: "3%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
-                <Typography>About</Typography>
+                <Typography variant='h4' gutterBottom>About</Typography>
+                <Typography>Qui puoi trovare la nostra documentazione: <Link href="http://localhost:3000/api/docs/">Docs</Link></Typography>
             </Paper>
         </Box>
     )
