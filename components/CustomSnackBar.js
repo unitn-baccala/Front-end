@@ -27,7 +27,7 @@ export default function CustomSnackbar(props){
         <React.Fragment>
           <IconButton
             size="small"
-            onClick={props.handleClose}
+            onClick={props.handleClick}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
@@ -38,10 +38,10 @@ export default function CustomSnackbar(props){
         <Snackbar
             open={props.open}
             autoHideDuration={3000}
-            onClose={props.handleClose}
+            onClose={props.handleClick}
             action={action}
         >
-            <Alert variant="filled" onClose={props.handleClose} severity={props.severity}>
+            <Alert variant="filled" onClose={props.handleClick} severity={props.severity}>
                 {props.message}
             </Alert>
         </Snackbar>

@@ -59,7 +59,7 @@ export default function SignIn() {
                     );
                     setOpen(true);
                     document.cookie = "token=" + data.token;
-                    setTimeout(router.push('/user'), 3000);
+                    setTimeout(router.push('/admin'), 3000);
                 }
         });
     }
