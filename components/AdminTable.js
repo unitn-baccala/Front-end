@@ -6,45 +6,30 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
+import Alert from '@mui/material/Alert';
+import Typography from '@mui/material/Typography';
+import { LinearProgress } from '@mui/material';
 
 function Headers(props) {
     return (
         <React.Fragment>
             {
                 props.table === "menu" &&
-                <React.Fragment>
-                    <TableRow>
-                        <TableCell>Menu</TableCell>
-                        <TableCell align="right">Nome</TableCell>
-                        <TableCell align="right">Piatti</TableCell>
-                        <TableCell align="right">Orario di attività - inizio</TableCell>
-                        <TableCell align="right">Orario di attività - fine</TableCell>
-                    </TableRow>
-                </React.Fragment>
+                <TableRow>
+                    <TableCell>Nome</TableCell>
+                    <TableCell align="right">Piatti</TableCell>
+                    <TableCell align="right">Orario di attività - inizio</TableCell>
+                    <TableCell align="right">Orario di attività - fine</TableCell>
+                </TableRow>
             }
             {
                 props.table === "dishes" &&
-                <React.Fragment>
-                    <TableRow>
-                        <TableCell>Piatti</TableCell>
-                        <TableCell align="right">Nome</TableCell>
-                        <TableCell align="right">Descrizione</TableCell>
-                        <TableCell align="right">Ingredienti</TableCell>
-                        <TableCell align="right">Categorie</TableCell>
-                    </TableRow>
-                </React.Fragment>
+                <TableRow>
+                    <TableCell>Nome</TableCell>
+                    <TableCell align="right">Descrizione</TableCell>
+                    <TableCell align="right">Ingredienti</TableCell>
+                    <TableCell align="right">Categorie</TableCell>
+                </TableRow>
             }
         </React.Fragment>        
     )
@@ -59,23 +44,78 @@ export default function AdminTable(props) {
                     <Headers table={props.table}></Headers>
                 </TableHead>
                 <TableBody>
-                    {rows.map((row) => (
-                        <TableRow
-                            key={row.name}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                        >
-                            <TableCell component="th" scope="row">
-                            {row.name}
-                            </TableCell>
-                            <TableCell align="right">{row.calories}</TableCell>
-                            <TableCell align="right">{row.fat}</TableCell>
-                            <TableCell align="right">{row.carbs}</TableCell>
-                            <TableCell align="right">{row.protein}</TableCell>
-                        </TableRow>
-                    ))}
+                    <React.Fragment>
+                        {
+                            props.table === "menu" && 
+                            props.rows.map((row) => (
+                                <TableRow
+                                    key={row._id}
+                                >
+                                    <TableCell>{row.name}</TableCell>
+                                    <TableCell align="right">
+                                        <Alert severity="warning">
+                                            <Typography variant='body1'>W.I.P Work In Progress</Typography>
+                                        </Alert>
+                                    </TableCell>
+                                    <TableCell align="right">{Math.trunc(row.start_time / 60)}:{(row.start_time % 60).toString().padStart(2, '0')}</TableCell>
+                                    <TableCell align="right">{Math.trunc(row.end_time / 60)}:{(row.end_time % 60).toString().padStart(2, '0')}</TableCell>
+                                </TableRow>     
+                            ))
+                        }
+                        {
+                            props.table === "dishes" && 
+                            props.rows.map((row) => (
+                                <TableRow
+                                    key={row._id}
+                                >
+                                    <TableCell>{row.name}</TableCell>
+                                    <TableCell align="right">{row.description}</TableCell>
+                                    <TableCell align="right">
+                                        <Alert severity="warning">
+                                            <Typography variant='body1'>W.I.P Work In Progress</Typography>
+                                        </Alert>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Alert severity="warning">
+                                            <Typography variant='body1'>W.I.P Work In Progress</Typography>
+                                        </Alert>
+                                    </TableCell>
+                                </TableRow>     
+                            ))
+                        }
+                    </React.Fragment>
                 </TableBody>
             </Table>
         </TableContainer>
     </React.Fragment>
   );
 }
+/*
+{
+    props.table === "menu" && rows.map((row) => (
+        <TableRow
+            key={row._id}
+        >
+            <TableCell>{row.name}</TableCell>
+            <TableCell align="right">
+                <Alert variant="filled" severity="warning">
+                    <Typography variant='body1'>W.I.P Work In Progress</Typography>
+                </Alert>
+            </TableCell>
+            <TableCell align="right">{row.start_time}</TableCell>
+            <TableCell align="right">{row.end_time}</TableCell>
+        </TableRow>     
+    ))
+}
+{
+    props.table === "dishes" && rows.map((row) => (
+        <TableRow
+            key={row._id}
+        >
+            <TableCell align="right">{row.name}</TableCell>
+            <TableCell align="right">{row.description}</TableCell>
+            <TableCell align="right">ids</TableCell>
+            <TableCell align="right">ids</TableCell>
+        </TableRow>     
+    ))
+}*/
