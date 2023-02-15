@@ -1,54 +1,43 @@
-import { getUser } from "../lib/api";
 import React from 'react';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import { Paper } from '@mui/material';
-import Link from 'next/link'
-import LockIcon from '@mui/icons-material/Lock';
-import styles from '../styles/Link.module.css'
-import { useForm } from "react-hook-form";
-import AppBar from '@mui/material/AppBar';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import CssBaseline from '@mui/material/CssBaseline';
-import StarIcon from '@mui/icons-material/StarBorder';
-import Toolbar from '@mui/material/Toolbar';
-import GlobalStyles from '@mui/material/GlobalStyles';
-import { grey } from '@mui/material/colors';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import Pricing from '../components/Pricing';
+import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
 import Stack from '@mui/material/Stack';
 import LinearProgress from '@mui/material/LinearProgress';
-import { ChairAltOutlined } from "@mui/icons-material";
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import { getUser } from "../lib/api";
+import { readCookie } from "../lib/cookie";
+import CustomSnackbar from '../components/CustomSnackBar';
 
 export default function Account() {
     const [user, setUser] = React.useState();
+    const [openSnackBar, setOpenSnackBar] = React.useState(false);
+    const [severity, setSeverity] = React.useState("warning");
+    const [message, setMessage] = React.useState("Lorem Ipsum");
 
-    React.useEffect(()=>{
-        console.log(document.cookie);
-        console.log(document.cookie.split('=')[1]);
+    const handleClose = () => {    
+        setOpenSnackBar(false);
+    };
 
-        getUser(document.cookie.split('=')[1])
+    React.useEffect(() => {
+        getUser(readCookie("token"))
             .then(async (response) => [await response.json(), response])
             .then(([data, res]) => {
-                if (res.status == 400 || res.status == 500) {
-                    //error
+                if (res.status == 200) {
+                    setUser(data);
                 }
                 else {
-                    //success
-                    setUser(data);
-                    console.log(data);
+                    setSeverity("error");
+                    setMessage(
+                        <React.Fragment>
+                            <Typography variant='body1'>Errore API</Typography>
+                            <Typography variant='body2'>{data.msg}</Typography>
+                        </React.Fragment>
+                    );
+                    setOpenSnackBar(true);
                 }
         });
      }, []);
@@ -67,37 +56,39 @@ export default function Account() {
                                 </Typography>
                             </Avatar>
                             <Stack direction="column" justifyContent="space-evenly" alignItems="flex-start" spacing={1}>
-                                <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={0}>
-                                    <Typography variant="h6">Nome attività:</Typography>
-                                    <Typography variant='body1' marginLeft={1}>
+                                <Stack direction="row" justifyContent="flex-start" alignItems="flex-end" spacing={1}>
+                                    <Typography variant="h5" sx={{ fontWeight: "bold" }} >Nome attività:</Typography>
+                                    <Typography variant='h5'>
                                         {user.business_name}
                                     </Typography>
                                 </Stack>
-                                <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={0}>
-                                    <Typography variant="h6">Indirizzo email:</Typography>
-                                    <Typography variant='body1' marginLeft={1}>
+                                <Stack direction="row" justifyContent="flex-start" alignItems="flex-start" spacing={1}>
+                                    <Typography variant="h5" sx={{ fontWeight: "bold" }}>Indirizzo email:</Typography>
+                                    <Typography variant='h5'>
                                         {user.email}
                                     </Typography>
                                 </Stack>
-                                <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={0}>
-                                    <Typography variant="h6">2FA:</Typography>
-                                    <Checkbox disabled checked />
-                                    <Typography variant='body1'>
-                                        {
-                                            user.enabled_2fa ?
-                                            "Attivato"
-                                            :
-                                            "Disattivato"
+                                <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
+                                    <Typography variant="h5" sx={{ fontWeight: "bold" }}>2FA:</Typography>
+                                    <FormGroup>
+                                        <FormControlLabel disabled checked control={<Checkbox />} label={
+                                            <Typography variant='h5'>
+                                                { user.enabled_2fa ? "Attivato" : "Disattivato" }
+                                            </Typography>
                                         }
-                                    </Typography>
+                                    />
+                                    </FormGroup>
                                 </Stack>
                             </Stack>
                         </Stack>
                     </Paper>
                 </Box>
                 :
-                <LinearProgress />
+                <Box sx={{ width: "90%", margin: "5%" }}>
+                    <LinearProgress />
+                </Box>
             }
+            <CustomSnackbar open={openSnackBar} handleClose={handleClose} severity={severity} message={message}></CustomSnackbar>
         </React.Fragment>
     )
 }

@@ -1,31 +1,8 @@
-import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Grid from '@mui/material/Grid';
+import React from 'react';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
 import { Paper } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import Link from 'next/link'
-import LockIcon from '@mui/icons-material/Lock';
-import { useForm } from "react-hook-form";
-import AppBar from '@mui/material/AppBar';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import CssBaseline from '@mui/material/CssBaseline';
-import StarIcon from '@mui/icons-material/StarBorder';
-import Toolbar from '@mui/material/Toolbar';
-import GlobalStyles from '@mui/material/GlobalStyles';
-import { grey } from '@mui/material/colors';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
 import { useRouter } from 'next/router'
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -33,33 +10,40 @@ import { getMenuFull } from '../../lib/api';
 import { TabPanel } from '../../components/TabPanel';
 import Dish from '../../components/Dish'
 import Alert from '@mui/material/Alert';
+import CustomSnackbar from '../../components/CustomSnackBar';
 
 export default function Post() {
     const router = useRouter();
     const { business_name } = router.query;
-
     const [menu, setMenu] = React.useState();
-
     const [value, setValue] = React.useState(0);
+    const [openSnackBar, setOpenSnackBar] = React.useState(false);
+    const [severity, setSeverity] = React.useState("warning");
+    const [message, setMessage] = React.useState("Lorem Ipsum");
   
     const handleChange = (event, newValue) => {
       setValue(newValue);
     };
 
-    React.useEffect(() => {
-        if(document.cookie.split('=')[1] === "" || document.cookie === ""){
-            console.log("no cookie");
-        }
+    const handleSnackbarClose = () => {    
+        setOpenSnackBar(false);
+    };
 
+    React.useEffect(() => {
         getMenuFull(business_name)
         .then(async (response) => [await response.json(), response])
         .then(([data, res]) => {
-            if (res.status == 400 || res.status == 500 || res.status == 401 || res.status == 403) {
-                //error
-            }
-            else {
-                //success
+            if(res.status == 200) {
                 setMenu(data);
+            } else {
+                setSeverity("error");
+                setMessage(
+                    <React.Fragment>
+                        <Typography variant='body1'>Errore API</Typography>
+                        <Typography variant='body2'>{data.msg}</Typography>
+                    </React.Fragment>
+                );
+                setOpenSnackBar(true);
             }
         });
     }, [business_name]);
@@ -83,7 +67,7 @@ export default function Post() {
 
                 <Box sx={{ width: '100%' }}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: "2%" }}>
-                        <Tabs value={value} onChange={handleChange}>
+                        <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="auto">
                         {
                             menu && menu.categories.map((category) => (
                                 <Tab label={category.name} key={category._id}/>
@@ -114,27 +98,11 @@ export default function Post() {
                             )
                         })
                         :
-                        <Alert severity="warning" variant="filled">Non esiste un attività con questo nome!</Alert>
+                        <Alert severity="warning" variant="filled">Non esiste un menu per questa attività!</Alert>
                     }
                 </Box>
-
             </Paper>
+            <CustomSnackbar open={openSnackBar} handleClose={handleSnackbarClose} severity={severity} message={message}></CustomSnackbar>
         </Box>
     )
 }
-
-/*
-                                {
-                                    menu.menu.dishes.map((dish) => {
-                                        console.log(category.name);
-                                        
-                                        dish.categories.forEach( (dishCategory) => {
-                                            console.log(dishCategory.name);
-                                            if(dishCategory.name === category.name) {
-                                                console.log("true");
-                                                <Dish dish={dish} key={dish._id}></Dish>
-                                            }
-                                        });
-                                    })
-                                }
-*/

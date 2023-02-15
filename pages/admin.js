@@ -1,19 +1,6 @@
-import * as React from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
 import AdminAppBar from '../components/AdminAppBar';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import QrCodeIcon from '@mui/icons-material/QrCode';
 import AdminDrawer from '../components/AdminDrawer';
 import AdminTable from '../components/AdminTable';
 import Select from '@mui/material/Select';
@@ -23,6 +10,7 @@ import { getMenu } from '../lib/api';
 import { LinearProgress } from '@mui/material';
 import { getDish } from '../lib/api';
 import { useRouter } from 'next/router'
+import { readCookie } from '../lib/cookie';
 
 export default function Admin() {
     const [openDrawer, setOpenDrawer] = React.useState(false);
@@ -34,76 +22,89 @@ export default function Admin() {
     const router = useRouter()
 
     React.useEffect(() => {
-        if(document.cookie.split('=')[1] === "" || document.cookie === ""){
-            console.log("no cookie");
+        if(readCookie("token") === null){
+            router.push("/signin");
+        } else {
+            getMenu(readCookie("token"))
+            .then(async (response) => [await response.json(), response])
+            .then(([data, res]) => {
+                if(res.status == 200) {
+                    setRows(data);
+                } else if(res.status == 403) {
+                    router.push('/signin')
+                } else {
+                    setSeverity("error");
+                    setMessage(
+                        <React.Fragment>
+                            <Typography variant='body1'>Errore API</Typography>
+                            <Typography variant='body2'>{data.msg}</Typography>
+                        </React.Fragment>
+                    );
+                    setOpenSnackBar(true);
+                }
+            });
         }
-
-        getMenu(document.cookie.split('=')[1])
-        .then(async (response) => [await response.json(), response])
-        .then(([data, res]) => {
-            if(res.status == 401){
-                router.push('/signin')
-            }
-            else if (res.status == 400 || res.status == 500 || res.status == 401 || res.status == 403) {
-                //error
-            }
-            else {
-                //success
-                setRows(data);
-            }
-        });
     }, []);
     
-    const handleDrawerClick = (event, reason) => {
+    const handleDrawerClick = () => {
         setOpenDrawer(!openDrawer);
+    };
+
+    const handleSnackbarClose = () => {    
+        setOpenSnackBar(false);
     };
 
     const handleChange = (event) => {
         setTable(event.target.value);
 
-        console.log(table);
-
-        if(table === "menu"){
-            getMenu(document.cookie.split('=')[1])
+        if(readCookie("token") === null){
+            router.push("/login");
+        } else if (event.target.value === "menu"){
+            getMenu(readCookie("token"))
             .then(async (response) => [await response.json(), response])
             .then(([data, res]) => {
-                if(res.status == 401){
+                if(res.status == 200) {
+                    setRows(data);
+                } else if(res.status == 403) {
                     router.push('/signin')
-                }
-                else if (res.status == 400 || res.status == 500 || res.status == 403) {
-                    //error
-                }
-                else {
-                    //success
-                    setRows(data);
+                } else {
+                    setSeverity("error");
+                    setMessage(
+                        <React.Fragment>
+                            <Typography variant='body1'>Errore API</Typography>
+                            <Typography variant='body2'>{data.msg}</Typography>
+                        </React.Fragment>
+                    );
+                    setOpenSnackBar(true);
                 }
             });
-        }
-
-        if(table === "dishes"){
-            getDish(document.cookie.split('=')[1])
+        } else if (event.target.value === "dishes"){
+            getDish(readCookie("token"))
             .then(async (response) => [await response.json(), response])
             .then(([data, res]) => {
-                if (res.status == 400 || res.status == 500 || res.status == 401 || res.status == 403) {
-                    //error
-                }
-                else {
-                    //success
+                if(res.status == 200) {
                     setRows(data);
+                } else if(res.status == 403) {
+                    router.push('/signin')
+                } else {
+                    setSeverity("error");
+                    setMessage(
+                        <React.Fragment>
+                            <Typography variant='body1'>Errore API</Typography>
+                            <Typography variant='body2'>{data.msg}</Typography>
+                        </React.Fragment>
+                    );
+                    setOpenSnackBar(true);
                 }
             });
         }
-    };
-
-    const handleSnackbarClick = (event, reason) => { 
-        setOpenSnackBar(!openSnackBar);
     };
 
     return (
         <React.Fragment>
             <AdminAppBar handleClick={handleDrawerClick}></AdminAppBar>
             <AdminDrawer open={openDrawer} handleClick={handleDrawerClick}></AdminDrawer>
-            <Box sx={{ height: "100vh", width: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
+            <Box sx={{ height: "100%", width: "90%", display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "center", margin: "5%"}}>
                 <Select
                     value={table}
                     onChange={handleChange}
@@ -120,7 +121,7 @@ export default function Admin() {
                     </Box>
                 }
             </Box>
-            <CustomSnackbar open={openSnackBar} handleClick={handleSnackbarClick} severity={severity} message={message}></CustomSnackbar>
+            <CustomSnackbar open={openSnackBar} handleClose={handleSnackbarClose} severity={severity} message={message}></CustomSnackbar>
         </React.Fragment>
     );
 }

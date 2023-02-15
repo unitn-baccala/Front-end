@@ -11,7 +11,7 @@ export default function App({ Component, pageProps }) {
         <StrictMode>
             <Head>
                 <title>Baccalà</title>
-                <link rel="icon" href="/icon.ico" />
+                <link rel="icon" href="/icon.png" />
             </Head>
             <CssBaseline />
 

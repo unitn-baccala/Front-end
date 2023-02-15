@@ -1,27 +1,16 @@
-import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
+import React from 'react';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
 import { Paper } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import Link from 'next/link'
 import LockIcon from '@mui/icons-material/Lock';
-import styles from '../styles/Link.module.css'
 import { useForm } from "react-hook-form";
 import { loginUser } from '../lib/api';
-import Snackbar from '@mui/material/Snackbar';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import CustomSnackbar from '../components/CustomSnackBar';
 import { useRouter } from 'next/router'
+import { createCookie } from '../lib/cookie';
 
 export default function SignIn() {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -30,11 +19,7 @@ export default function SignIn() {
     const [severity, setSeverity] = React.useState("warning");
     const [message, setMessage] = React.useState("Lorem Ipsum");
 
-    const handleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-          return;
-        }
-    
+    const handleClose = () => {    
         setOpen(false);
     };
 
@@ -42,7 +27,18 @@ export default function SignIn() {
         loginUser(data.email, data.password)
             .then(async (response) => [await response.json(), response])
             .then(([data, res]) => {
-                if (res.status == 400 || res.status == 500) {
+                if (res.status == 200) {
+                    setSeverity("success");
+                    setMessage(
+                        <Typography variant='body1'>Accesso avvenuto</Typography>
+                    );
+                    setOpen(true);
+
+                    createCookie("token", data.token, 1);
+
+                    setTimeout(router.push('/admin'), 3000);
+                }
+                else {
                     setSeverity("error");
                     setMessage(
                         <React.Fragment>
@@ -51,15 +47,6 @@ export default function SignIn() {
                         </React.Fragment>
                     );
                     setOpen(true);
-                }
-                else {
-                    setSeverity("success");
-                    setMessage(
-                        <Typography variant='body1'>Accesso avvenuto</Typography>
-                    );
-                    setOpen(true);
-                    document.cookie = "token=" + data.token;
-                    setTimeout(router.push('/admin'), 3000);
                 }
         });
     }
@@ -85,7 +72,7 @@ export default function SignIn() {
                                     message: "campo obbligatorio"
                                 },
                                 pattern: {
-                                    value: /^([_a-z0-9]+[\._a-z0-9]*)(\+[a-z0-9]+)?@(([a-z0-9-]+\.)*[a-z]{2,4})$/,
+                                    value: (/^([_a-z0-9]+[\._a-z0-9]*)(\+[a-z0-9]+)?@(([a-z0-9-]+\.)*[a-z]{2,4})$/),
                                     message: "email non valida"
                                 }
                             })}
@@ -95,6 +82,7 @@ export default function SignIn() {
                             required
                             fullWidth
                             label="Password"
+                            type="password"
                             helperText={errors.password && errors.password.message}
                             {...register("password", {
                                 required: {
@@ -110,7 +98,7 @@ export default function SignIn() {
                                     message: "lunghezza massima 64 caratteri"
                                 },
                                 pattern: {
-                                    value: /^(?=.*[a-zA-Z])(.{12,64})$/,
+                                    value: (/^(?=.*[a-zA-Z])(.{12,64})$/),
                                     message: "la password non rispetta i requisiti"
                                 }
                             })}
@@ -120,13 +108,14 @@ export default function SignIn() {
                             fullWidth
                             variant="contained"
                         >
-                            Accedi
+                            <Typography variant="button" color="white">Accedi</Typography>
                         </Button>
                         <Button
                             fullWidth
                             variant="contained"
+                            onClick={() => {router.push("/signup")}}
                         >
-                            <Link href="/signup" className={styles.link}>Registrati</Link>
+                            <Typography variant="button" color="white">Registrati</Typography>
                         </Button>
                     </Stack>
                 </Paper>

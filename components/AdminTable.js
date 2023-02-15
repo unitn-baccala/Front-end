@@ -1,14 +1,32 @@
 import * as React from 'react';
+import PropTypes from 'prop-types';
+import { alpha } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import Alert from '@mui/material/Alert';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { LinearProgress } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import Checkbox from '@mui/material/Checkbox';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import { visuallyHidden } from '@mui/utils';
+import { Alert } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { deleteMenu } from '../lib/api';
+import CustomSnackbar from './CustomSnackBar';
+import { readCookie } from '../lib/cookie';
+import AddMenu from './AddMenu';
 
 function Headers(props) {
     return (
@@ -16,8 +34,9 @@ function Headers(props) {
             {
                 props.table === "menu" &&
                 <TableRow>
+                    <TableCell><Checkbox disabled></Checkbox></TableCell>
                     <TableCell>Nome</TableCell>
-                    <TableCell align="right">Piatti</TableCell>
+                    <TableCell>Piatti</TableCell>
                     <TableCell align="right">Orario di attività - inizio</TableCell>
                     <TableCell align="right">Orario di attività - fine</TableCell>
                 </TableRow>
@@ -25,10 +44,11 @@ function Headers(props) {
             {
                 props.table === "dishes" &&
                 <TableRow>
+                    <TableCell><Checkbox disabled></Checkbox></TableCell>
                     <TableCell>Nome</TableCell>
-                    <TableCell align="right">Descrizione</TableCell>
-                    <TableCell align="right">Ingredienti</TableCell>
-                    <TableCell align="right">Categorie</TableCell>
+                    <TableCell>Descrizione</TableCell>
+                    <TableCell>Ingredienti</TableCell>
+                    <TableCell>Categorie</TableCell>
                 </TableRow>
             }
         </React.Fragment>        
@@ -36,86 +56,141 @@ function Headers(props) {
 }
 
 export default function AdminTable(props) {
-  return (
-    <React.Fragment>
-        <TableContainer component={Paper} sx={{ width: "90%", margin: "5%" }}>
-            <Table>
-                <TableHead>
-                    <Headers table={props.table}></Headers>
-                </TableHead>
-                <TableBody>
-                    <React.Fragment>
-                        {
-                            props.table === "menu" && 
-                            props.rows.map((row) => (
-                                <TableRow
-                                    key={row._id}
-                                >
-                                    <TableCell>{row.name}</TableCell>
-                                    <TableCell align="right">
-                                        <Alert severity="warning">
-                                            <Typography variant='body1'>W.I.P Work In Progress</Typography>
-                                        </Alert>
-                                    </TableCell>
-                                    <TableCell align="right">{Math.trunc(row.start_time / 60)}:{(row.start_time % 60).toString().padStart(2, '0')}</TableCell>
-                                    <TableCell align="right">{Math.trunc(row.end_time / 60)}:{(row.end_time % 60).toString().padStart(2, '0')}</TableCell>
-                                </TableRow>     
-                            ))
-                        }
-                        {
-                            props.table === "dishes" && 
-                            props.rows.map((row) => (
-                                <TableRow
-                                    key={row._id}
-                                >
-                                    <TableCell>{row.name}</TableCell>
-                                    <TableCell align="right">{row.description}</TableCell>
-                                    <TableCell align="right">
-                                        <Alert severity="warning">
-                                            <Typography variant='body1'>W.I.P Work In Progress</Typography>
-                                        </Alert>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Alert severity="warning">
-                                            <Typography variant='body1'>W.I.P Work In Progress</Typography>
-                                        </Alert>
-                                    </TableCell>
-                                </TableRow>     
-                            ))
-                        }
-                    </React.Fragment>
-                </TableBody>
-            </Table>
-        </TableContainer>
-    </React.Fragment>
-  );
+    const [selected, setSelected] = React.useState([]);
+    const [severity, setSeverity] = React.useState("warning");
+    const [message, setMessage] = React.useState("Lorem Ipsum");
+    const [openSnackBar, setOpenSnackBar] = React.useState(false);
+    const [open, setOpen] = React.useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+      };
+    
+      const handleClose = () => {
+        setOpen(false);
+      };
+
+    const handleSnackbarClose = () => {    
+        setOpenSnackBar(false);
+    };
+    
+    const isSelected = (id) => {
+        return selected.indexOf(id) != -1;
+    }
+
+    const handleRowClick = (id) => {
+        if(selected.length < 0){
+          setSelected([id]);
+        } else if (!isSelected(id)) {
+          setSelected(selected.concat(id));
+        } else {
+          setSelected(selected.filter((selected) => {
+            return selected != id;
+          }));
+        }
+    };
+
+    const handleDelete = () => {
+        const token = readCookie("token");
+
+        selected.forEach(async (selected) => {
+            deleteMenu(token, selected)
+            .then(async (response) => [await response.json(), response])
+            .then(([data, res]) => {
+                if(res.status != 200) {
+                    setSeverity("error");
+                    setMessage(
+                        <React.Fragment>
+                            <Typography variant='body1'>Errore API</Typography>
+                            <Typography variant='body2'>{data.msg}</Typography>
+                        </React.Fragment>
+                    );
+                    setOpenSnackBar(true);
+                }
+            });
+        })
+
+        setSelected([]);
+    }
+
+    return (
+        <React.Fragment>
+            <Paper sx={{ width: "90%", margin: "3%" }}>
+                <Toolbar>
+                    {
+                        selected.length > 0 ? (
+                            <React.Fragment>
+                                <Typography variant="h6" sx={{ flex: '1 1 100%' }}>{selected.length + " selezionati"}</Typography>
+                                <IconButton onClick={handleDelete}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </React.Fragment>
+                        ) : (
+                            <React.Fragment>
+                                <Typography variant="h6" sx={{ flex: '1 1 100%' }}>Elementi</Typography>
+                                <IconButton onClick={handleClickOpen}>
+                                    <AddIcon/>
+                                </IconButton>
+                                <AddMenu open={open} handleClose={handleClose}></AddMenu>
+                            </React.Fragment>
+                        )
+                    }
+                </Toolbar>
+                <TableContainer sx={{ height: "50vh" }}>
+                    <Table stickyHeader>
+                        <TableHead>
+                            <Headers table={props.table}></Headers>
+                        </TableHead>
+                        <TableBody>
+                            <React.Fragment>
+                                {
+                                    props.table === "menu" && 
+                                    props.rows.map((row) => (
+                                        <TableRow
+                                            key={row._id}
+                                            selected={isSelected(row._id)}
+                                            hover
+                                        >
+                                            <TableCell onClick={() => handleRowClick(row._id)}>
+                                                <Checkbox checked={isSelected(row._id)}/>
+                                            </TableCell>
+                                            <TableCell>{row.name}</TableCell>
+                                            <TableCell>
+                                                <Alert severity="warning">WIP - Lista dei piatti</Alert>
+                                            </TableCell>
+                                            <TableCell align="right">{Math.trunc(row.start_time / 60)}:{(row.start_time % 60).toString().padStart(2, '0')}</TableCell>
+                                            <TableCell align="right">{Math.trunc(row.end_time / 60)}:{(row.end_time % 60).toString().padStart(2, '0')}</TableCell>
+                                        </TableRow>     
+                                    ))
+                                }
+                                {
+                                    props.table === "dishes" && 
+                                    props.rows.map((row) => (
+                                        <TableRow
+                                            key={row._id}
+                                            selected={isSelected(row._id)}
+                                            hover
+                                        >
+                                            <TableCell onClick={() => handleRowClick(row._id)}>
+                                                <Checkbox checked={isSelected(row._id)}/>
+                                            </TableCell>
+                                            <TableCell>{row.name}</TableCell>
+                                            <TableCell>{row.description}</TableCell>
+                                            <TableCell>
+                                                <Alert severity="warning">WIP - Lista degli Ingredienti</Alert>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Alert severity="warning">WIP - Lista delle Categorie</Alert>
+                                            </TableCell>
+                                        </TableRow>     
+                                    ))
+                                }
+                            </React.Fragment>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+            <CustomSnackbar open={openSnackBar} handleClose={handleSnackbarClose} severity={severity} message={message}></CustomSnackbar>
+        </React.Fragment>
+    );
 }
-/*
-{
-    props.table === "menu" && rows.map((row) => (
-        <TableRow
-            key={row._id}
-        >
-            <TableCell>{row.name}</TableCell>
-            <TableCell align="right">
-                <Alert variant="filled" severity="warning">
-                    <Typography variant='body1'>W.I.P Work In Progress</Typography>
-                </Alert>
-            </TableCell>
-            <TableCell align="right">{row.start_time}</TableCell>
-            <TableCell align="right">{row.end_time}</TableCell>
-        </TableRow>     
-    ))
-}
-{
-    props.table === "dishes" && rows.map((row) => (
-        <TableRow
-            key={row._id}
-        >
-            <TableCell align="right">{row.name}</TableCell>
-            <TableCell align="right">{row.description}</TableCell>
-            <TableCell align="right">ids</TableCell>
-            <TableCell align="right">ids</TableCell>
-        </TableRow>     
-    ))
-}*/
