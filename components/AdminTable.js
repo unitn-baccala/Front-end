@@ -26,7 +26,7 @@ function Headers(props) {
                 <TableRow>
                     <TableCell><Checkbox disabled></Checkbox></TableCell>
                     <TableCell>Nome</TableCell>
-                    <TableCell>Piatti</TableCell>
+                    <TableCell>Alimenti</TableCell>
                     <TableCell align="right">Orario di attività - inizio</TableCell>
                     <TableCell align="right">Orario di attività - fine</TableCell>
                 </TableRow>
@@ -167,7 +167,7 @@ export default function AdminTable(props) {
                                             </TableCell>
                                             <TableCell>{row.name}</TableCell>
                                             <TableCell>
-                                                <Alert severity="warning">WIP - Lista dei piatti</Alert>
+                                                <Alert severity="warning">WIP - Lista degli alimenti</Alert>
                                             </TableCell>
                                             <TableCell align="right">{Math.trunc(row.start_time / 60)}:{(row.start_time % 60).toString().padStart(2, '0')}</TableCell>
                                             <TableCell align="right">{Math.trunc(row.end_time / 60)}:{(row.end_time % 60).toString().padStart(2, '0')}</TableCell>

@@ -98,7 +98,7 @@ export default function Admin() {
                         label="Tabella"
                     >
                         <MenuItem value={"menu"}>Menu</MenuItem>
-                        <MenuItem value={"dishes"}>Piatti</MenuItem>
+                        <MenuItem value={"dishes"}>Alimenti</MenuItem>
                         <MenuItem value={"ingredients"}>Ingredienti</MenuItem>
                         <MenuItem value={"categories"}>Categorie</MenuItem>
                     </Select>
