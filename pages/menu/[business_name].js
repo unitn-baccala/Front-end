@@ -98,7 +98,7 @@ export default function Post() {
                             )
                         })
                         :
-                        <Alert severity="warning" variant="filled">Non esiste un menu per questa attività!</Alert>
+                        <Alert severity="warning" variant="filled">Non esiste un'attività con questo nome oppure l'attività non ha un menu attivo al momento</Alert>
                     }
                 </Box>
             </Paper>
