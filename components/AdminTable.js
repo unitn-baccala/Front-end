@@ -51,6 +51,14 @@ function Headers(props) {
                     <TableCell>Categorie</TableCell>
                 </TableRow>
             }
+            {
+                props.table !== "menu" && props.table !== "dishes" &&
+                <TableRow>
+                    <TableCell>
+                        <Alert severity="warning">WIP - Questa feature non è ancora implementata</Alert>
+                    </TableCell>
+                </TableRow>
+            }
         </React.Fragment>        
     )
 }
@@ -110,7 +118,15 @@ export default function AdminTable(props) {
             });
         })
 
+        const rows = props.rows.filter((row) => {
+            return !selected.includes(row._id)
+        })
+
+        props.setRows(rows)
+
         setSelected([]);
+
+        props.handleChange("menu");
     }
 
     return (
@@ -118,21 +134,26 @@ export default function AdminTable(props) {
             <Paper sx={{ width: "90%", margin: "3%" }}>
                 <Toolbar>
                     {
-                        selected.length > 0 ? (
-                            <React.Fragment>
-                                <Typography variant="h6" sx={{ flex: '1 1 100%' }}>{selected.length + " selezionati"}</Typography>
-                                <IconButton onClick={handleDelete}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            </React.Fragment>
+                        props.table === "menu" ?
+                        (
+                            selected.length > 0 ? (
+                                <React.Fragment>
+                                    <Typography variant="h6" sx={{ flex: '1 1 100%' }}>{selected.length + " selezionati"}</Typography>
+                                    <IconButton onClick={handleDelete}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </React.Fragment>
+                            ) : (
+                                <React.Fragment>
+                                    <Typography variant="h6" sx={{ flex: '1 1 100%' }}>Elementi</Typography>
+                                    <IconButton onClick={handleClickOpen}>
+                                        <AddIcon/>
+                                    </IconButton>
+                                    <AddMenu open={open} handleClose={handleClose} handleChange={props.handleChange} setRows={props.setRows} rows={props.rows}></AddMenu>
+                                </React.Fragment>
+                            )
                         ) : (
-                            <React.Fragment>
-                                <Typography variant="h6" sx={{ flex: '1 1 100%' }}>Elementi</Typography>
-                                <IconButton onClick={handleClickOpen}>
-                                    <AddIcon/>
-                                </IconButton>
-                                <AddMenu open={open} handleClose={handleClose}></AddMenu>
-                            </React.Fragment>
+                            <Typography variant="h6" sx={{ flex: '1 1 100%' }}>Elementi</Typography>
                         )
                     }
                 </Toolbar>
@@ -168,11 +189,10 @@ export default function AdminTable(props) {
                                     props.rows.map((row) => (
                                         <TableRow
                                             key={row._id}
-                                            selected={isSelected(row._id)}
                                             hover
                                         >
-                                            <TableCell onClick={() => handleRowClick(row._id)}>
-                                                <Checkbox checked={isSelected(row._id)}/>
+                                            <TableCell>
+                                                <Checkbox disabled/>
                                             </TableCell>
                                             <TableCell>{row.name}</TableCell>
                                             <TableCell>{row.description}</TableCell>

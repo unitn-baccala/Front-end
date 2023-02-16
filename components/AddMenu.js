@@ -2,9 +2,7 @@ import React from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useForm } from "react-hook-form";
 import { Stack } from '@mui/material';
@@ -28,12 +26,17 @@ export default function AddMenu(props) {
         setOpenSnackBar(false);
     };
 
-    const submit = (data) => {
-        createMenu(readCookie("token"), data.name, [], convertTime(data.start_time), convertTime(data.end_time))
+    const submit = (inputs) => {
+        createMenu(readCookie("token"), inputs.name, [], convertTime(inputs.start_time), convertTime(inputs.end_time))
             .then(async (response) => [await response.json(), response])
             .then(([data, res]) => {
                 if(res.status == 201) {
-                    handleSnackbarClose
+                    
+                    const newRow = {_id: data.id, name: inputs.name, dishes: [], start_time: inputs.start_time, end_time: inputs.end_time}
+                    props.setRows(props.rows.concat(newRow));
+
+                    props.handleChange("menu")
+                    props.handleClose();
                 } else {
                     setSeverity("error");
                     setMessage(
@@ -44,14 +47,14 @@ export default function AddMenu(props) {
                     );
                     setOpenSnackBar(true);
                 }
-        })        
+        })
     }
 
     return (
         <Dialog open={props.open} onClose={props.handleClose}>
             <DialogTitle>Aggiungi menu</DialogTitle>
             <DialogContent>
-                <Stack component="form" spacing={2} onSubmit={handleSubmit(submit)}>
+                <Stack component="form" spacing={2} onSubmit={handleSubmit(submit)} sx={{ marginTop: "5%" }}>
                     <TextField
                         error={errors.name}
                         required
